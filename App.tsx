@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
-import { SafeAreaView, Text, TextInput, Button, FlatList, View, StyleSheet, TouchableOpacity } from 'react-native';
+import { SafeAreaView, Text, TextInput, Button, FlatList, View,  StyleSheet, TouchableOpacity, Alert,} from 'react-native';
 
-// Define your course type according to your data structure
 type Course = {
   label: string;
   value: string | null;
@@ -21,23 +20,63 @@ const MenuEntry: React.FC = () => {
   const [price, setPrice] = useState<string>('');
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
 
-  // Pre-made chef meals
   const [premadeMeals, setPremadeMeals] = useState<MenuItem[]>([
-    { dishName: 'Caesar Salad', description: 'Fresh romaine, croutons, and Caesar dressing', course: 'Starter', price: '59.99' },
-    { dishName: 'Spaghetti Carbonara', description: 'Classic Italian pasta dish with egg, cheese, pancetta, and pepper', course: 'Main', price: '120.99' },
-    { dishName: 'Chocolate Cake', description: 'Rich and moist chocolate cake with creamy frosting', course: 'Dessert', price: '45.99' },
+    {
+      dishName: 'Caesar Salad',
+      description: 'Fresh romaine, croutons, and Caesar dressing',
+      course: 'Starter',
+      price: '59.99',
+    },
+    {
+      dishName: 'Spaghetti Carbonara',
+      description:
+        'Classic Italian pasta dish with egg, cheese, pancetta, and pepper',
+      course: 'Main',
+      price: '120.99',
+    },
+    {
+      dishName: 'Chocolate Cake',
+      description: 'Rich and moist chocolate cake with creamy frosting',
+      course: 'Dessert',
+      price: '45.99',
+    },
   ]);
 
-  // Function to calculate total price from menu items
   const calculateTotalPrice = (items: MenuItem[]): string => {
-    const total = items.reduce((accum, item) => {
-      return accum + parseFloat(item.price);
-    }, 0);
-    return total.toFixed(2); // Return total formatted to 2 decimal places
+    try {
+      const total = items.reduce((accum, item) => {
+        const itemPrice = parseFloat(item.price);
+        if (isNaN(itemPrice)) {
+          throw new Error(`Invalid price for item: ${item.dishName}`);
+        }
+        return accum + itemPrice;
+      }, 0);
+      return total.toFixed(2);
+    } catch (error) {
+      if (error instanceof Error) {
+        console.error(error.message);
+        Alert.alert('Error', 'An error occurred while calculating the total price.');
+      } else {
+        console.error('Unknown error occurred');
+        Alert.alert('Error', 'An unexpected error occurred.');
+      }
+      return '0.00';
+    }
   };
+  
 
   const handleAddMenuItem = () => {
-    if (dishName && description && course && price) {
+    if (!dishName || !description || !course || !price) {
+      Alert.alert('Error', 'Please fill out all fields before adding an item.');
+      return;
+    }
+
+    if (isNaN(parseFloat(price))) {
+      Alert.alert('Error', 'Please enter a valid number for the price.');
+      return;
+    }
+
+    try {
       const newItem: MenuItem = {
         dishName,
         description,
@@ -51,17 +90,65 @@ const MenuEntry: React.FC = () => {
       setDescription('');
       setCourse(null);
       setPrice('');
-    } else {
-      alert("Please fill all fields");
+    } catch (error) {
+      if (error instanceof Error) {
+        console.error(error.message);
+        Alert.alert('Error', 'Failed to add the menu item: ' + error.message);
+      } else {
+        console.error('An unknown error occurred.');
+        Alert.alert('Error', 'An unknown error occurred while adding the menu item.');
+      }
     }
+    
   };
 
   const handleRemoveMenuItem = (itemToRemove: MenuItem) => {
-    setMenuItems((prevItems) => prevItems.filter(item => item.dishName !== itemToRemove.dishName));
+    try {
+      setMenuItems((prevItems) =>
+        prevItems.filter((item) => item.dishName !== itemToRemove.dishName)
+      );
+    } catch (error) {
+      if (error instanceof Error) {
+        console.error(error.message);
+      } else {
+        console.error("An unknown error occurred.");
+      }
+    }
   };
 
+  const handleAddPremadeMeal = (meal: MenuItem) => {
+    try {
+      setMenuItems((prevItems) => [...prevItems, meal]);
+  
+      setPremadeMeals((prevMeals) =>
+        prevMeals.filter((item) => item.dishName !== meal.dishName)
+      );
+    } catch (error) {
+      if (error instanceof Error) {
+        console.error(error.message);
+        Alert.alert('Error', 'Failed to add the pre-made meal: ' + error.message);
+      } else {
+        console.error('An unknown error occurred.');
+        Alert.alert('Error', 'An unknown error occurred while adding the pre-made meal.');
+      }
+    }
+  };  
+
   const handleRemovePremadeMeal = (itemToRemove: MenuItem) => {
-    setPremadeMeals((prevItems) => prevItems.filter(item => item.dishName !== itemToRemove.dishName));
+    try {
+      setPremadeMeals((prevItems) =>
+        prevItems.filter((item) => item.dishName !== itemToRemove.dishName)
+      );
+    } catch (error) {
+      if (error instanceof Error) {
+        console.error(error.message);
+        Alert.alert('Error', 'Failed to remove the pre-made meal: ' + error.message);
+      } else {
+        console.error('An unknown error occurred.');
+        Alert.alert('Error', 'An unknown error occurred while removing the pre-made meal.');
+      }
+    }
+    
   };
 
   return (
@@ -72,7 +159,7 @@ const MenuEntry: React.FC = () => {
         placeholder="Dish Name"
         value={dishName}
         onChangeText={setDishName}
-        textAlign='center'
+        textAlign="center"
       />
       <TextInput
         style={styles.input}
@@ -81,15 +168,32 @@ const MenuEntry: React.FC = () => {
         onChangeText={setDescription}
       />
 
-      {/* Course Selection Buttons */}
       <View style={styles.buttonContainer}>
-        <TouchableOpacity style={[styles.courseButton, course === 'starter' && styles.selectedButton]} onPress={() => setCourse('starter')}>
+        <TouchableOpacity
+          style={[
+            styles.courseButton,
+            course === 'starter' && styles.selectedButton,
+          ]}
+          onPress={() => setCourse('starter')}
+        >
           <Text style={styles.buttonText}>Starter</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={[styles.courseButton, course === 'main' && styles.selectedButton]} onPress={() => setCourse('main')}>
+        <TouchableOpacity
+          style={[
+            styles.courseButton,
+            course === 'main' && styles.selectedButton,
+          ]}
+          onPress={() => setCourse('main')}
+        >
           <Text style={styles.buttonText}>Main</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={[styles.courseButton, course === 'dessert' && styles.selectedButton]} onPress={() => setCourse('dessert')}>
+        <TouchableOpacity
+          style={[
+            styles.courseButton,
+            course === 'dessert' && styles.selectedButton,
+          ]}
+          onPress={() => setCourse('dessert')}
+        >
           <Text style={styles.buttonText}>Dessert</Text>
         </TouchableOpacity>
       </View>
@@ -101,7 +205,7 @@ const MenuEntry: React.FC = () => {
         onChangeText={setPrice}
         keyboardType="numeric"
       />
-      
+
       <Button title="Add Menu Item" onPress={handleAddMenuItem} />
 
       <Text style={styles.premadeMealsTitle}>Pre-Made Chef Meals:</Text>
@@ -114,6 +218,9 @@ const MenuEntry: React.FC = () => {
             <Text style={styles.menuText}>{item.description}</Text>
             <Text style={styles.menuText}>{item.course}</Text>
             <Text style={styles.menuText}>R {item.price}</Text>
+            <TouchableOpacity onPress={() => handleAddPremadeMeal(item)}>
+          <Text style={styles.addText}>Add</Text>
+        </TouchableOpacity>
             <TouchableOpacity onPress={() => handleRemovePremadeMeal(item)}>
               <Text style={styles.removeText}>Remove</Text>
             </TouchableOpacity>
@@ -138,43 +245,82 @@ const MenuEntry: React.FC = () => {
         )}
       />
 
-      <Text style={styles.footer}>
-        Total Items: {menuItems.length}
-      </Text>
+      <Text style={styles.footer}>Total Items: {menuItems.length}</Text>
       <Text style={styles.totalPrice}>
-        Total Price: R {calculateTotalPrice(menuItems)} {/* Call the function here */}
+        Total Price: R {calculateTotalPrice(menuItems)}
       </Text>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  container: {  
     flex: 1,
     padding: 20,
-    backgroundColor: '#FFEFD5', // Light background color for a decorative touch
+    backgroundColor: '#FFEFD5',
+  },
+  buttonContainer: { 
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 10,
   },
   title: {
     fontSize: 28,
     fontWeight: 'bold',
     marginBottom: 20,
-    color: '#8B0000', // Dark red color for the title
+    color: '#8B0000',
     textAlign: 'center',
   },
-  input: {
+  menuText: {
+    fontSize: 16,
+    color: '#333',
+  },
+  menuItem: {
+    padding: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ccc',
+  },
+  premadeMealsTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginTop: 20,
+    marginBottom: 10,
+    textAlign: 'center',
+    color: '#8B0000',
+  },
+  addText: {
+    color: 'green',
+    marginTop: 10,
+    textAlign: 'center',
+    fontWeight: 'bold',
+  },
+  removeText: {
+    color: 'red',
+    marginTop: 10,
+    textAlign: 'center',
+  },
+  userItemsTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginTop: 20,
+    marginBottom: 10,
+    textAlign: 'center',
+    color: '#8B0000',
+  },
+  input: { 
     height: 40,
-    borderColor: '#8B0000', // Dark red border color
+    borderColor: '#8B0000',
     borderWidth: 2,
     marginBottom: 10,
     paddingLeft: 10,
-    borderRadius: 5, // Rounded corners for inputs
+    borderRadius: 5,
   },
-  buttonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 10,
+  buttonText: {
+    color: '#fff', 
+    fontSize: 16,
+    fontWeight: 'bold', 
   },
-  courseButton: {
+  courseButton: { 
     flex: 1,
     padding: 10,
     backgroundColor: '#8B0000',
@@ -183,23 +329,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   selectedButton: {
-    backgroundColor: '#FF6347', // Tomato color for selected button
+    backgroundColor: '#FF6347',
   },
-  buttonText: {
-    color: '#fff',
-    fontSize: 16,
-  },
-  menuItem: {
-    padding: 15,
-    borderBottomWidth: 2,
-    borderBottomColor: '#ccc',
-    backgroundColor: '#FFF8DC', // Light yellow background for menu items
-    borderRadius: 5, // Rounded corners for menu items
-    marginBottom: 10,
-  },
-  menuText: {
-    fontSize: 16,
-    color: '#333', // Darker color for better readability
+  totalPrice: {
+    fontSize: 20,
+    marginTop: 10,
+    textAlign: 'center',
+    fontWeight: 'bold',
+    color: '#8B0000',
   },
   footer: {
     fontSize: 20,
@@ -208,36 +345,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#8B0000',
   },
-  premadeMealsTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginTop: 20,
-    marginBottom: 10,
-    textAlign: 'center',
-    color: '#8B0000', // Dark red for title
-  },
-  userItemsTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginTop: 20,
-    marginBottom: 10,
-    textAlign: 'center',
-    color: '#8B0000', // Dark red for title
-  },
-  removeText: {
-    color: 'red',
-    marginTop: 10,
-    textAlign: 'center',
-    fontWeight: 'bold',
-  },
-  totalPrice: {
-    fontSize: 20,
-    marginTop: 10,
-    textAlign: 'center',
-    fontWeight: 'bold',
-    color: '#8B0000', // Use the same color for consistency
-  },
 });
 
 export default MenuEntry;
-
