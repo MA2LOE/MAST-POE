@@ -254,7 +254,7 @@ const styles = StyleSheet.create({
       marginTop: 20,
       marginBottom: 10,
       textAlign: 'center',
-      color: '#333333', // Dark gray for section titles
+      color: '#333335', // Dark gray for section titles
     },
     footer: {
       fontSize: 20,
