@@ -1,10 +1,10 @@
 import React from 'react';
 import { SafeAreaView, Text, StyleSheet } from 'react-native';
 
-const NewPage: React.FC = () => {
+const NextPage: React.FC = () => {
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={styles.title}>Welcome to the New Page!</Text>
+      <Text style={styles.text}>Welcome to the Next Page!</Text>
     </SafeAreaView>
   );
 };
@@ -14,13 +14,13 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#FFEFD5',
   },
-  title: {
+  text: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#8B0000',
   },
 });
 
-export default NewPage;
+export default NextPage;
